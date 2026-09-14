@@ -1,0 +1,342 @@
+STUDENT DROPOUT ANALYTICS AND PREDICTION SYSTEM
+================================================
+
+1. PROJECT PURPOSE
+------------------
+This project is a web-based Student Dropout Analytics and Prediction System.
+It helps an educational institution store student information, study academic
+patterns, and estimate whether a student may need additional support.
+
+The system does not decide a student's future. It provides an estimate based
+on historical data. Human review and appropriate support are always required.
+
+Important warning:
+Predictions are estimates based on historical data and should not be used as
+the sole basis for decisions about a student's education. Human review and
+appropriate support are required.
+
+
+2. TECHNOLOGIES USED
+---------------------
+Frontend:
+- React: Creates the website interface and pages.
+- Vite: Runs and builds the React application.
+- React Router: Allows navigation between pages.
+- CSS: Provides the responsive dashboard design.
+
+Backend:
+- Python: Main backend programming language.
+- FastAPI: Creates the API used by the frontend.
+- SQLAlchemy: Connects Python code to the database.
+- SQLite: Stores student and prediction information.
+
+Machine learning:
+- Pandas: Reads and processes CSV files.
+- NumPy: Supports numerical calculations.
+- scikit-learn: Creates and evaluates the machine-learning model.
+- joblib: Saves and loads the trained model.
+
+Testing:
+- pytest: Tests the backend API endpoints.
+
+
+3. MAIN PROJECT FOLDERS
+-----------------------
+backend/   Contains the Python FastAPI backend.
+dataset/   Contains the sample CSV training dataset.
+frontend/  Contains the React and Vite website.
+
+Important files:
+- backend/app/main.py
+  Contains the API routes and backend application.
+
+- backend/app/ml_service.py
+  Contains model training, evaluation, saving, loading, and prediction code.
+
+- backend/app/models.py
+  Defines the SQLite database tables.
+
+- backend/app/schemas.py
+  Validates data sent to the backend.
+
+- backend/app/database.py
+  Creates the SQLite database connection.
+
+- backend/test_app.py
+  Contains automated backend tests.
+
+- dataset/sample_students.csv
+  Contains synthetic student records used for the demonstration.
+
+- frontend/src/App.jsx
+  Contains the dashboard pages and frontend logic.
+
+- frontend/src/App.css
+  Contains the main dashboard design and responsive layout.
+
+- frontend/src/index.css
+  Contains global browser styles.
+
+- README.md
+  Contains basic project setup and usage information.
+
+
+4. OVERVIEW PAGE
+----------------
+The Overview page is the main dashboard.
+
+It displays:
+- Total Students
+- Low Risk students
+- Medium Risk students
+- High Risk students
+- Estimated Dropout Rate
+- Average Attendance
+- Average Academic Performance
+- Students Requiring Attention
+
+The values are loaded from the FastAPI backend, which reads the records from
+the SQLite database.
+
+The dashboard also displays the ethical warning about responsible use of
+predictions.
+
+
+5. STUDENTS PAGE
+-----------------
+The Students page is used to add and view student records.
+
+A student record contains:
+- Student ID
+- Age
+- Gender
+- Course
+- Semester
+- Attendance percentage
+- Previous semester marks
+- Current internal marks
+- Assignment score
+- Previous CGPA
+- Number of backlogs
+- Study hours
+- Academic performance
+- Dropout label
+
+The student data is sent to the backend and stored in SQLite.
+
+The dropout label is used in the training data:
+- 0 means the student is labelled as not having dropped out.
+- 1 means the student is labelled as having dropped out or being at risk.
+
+
+6. PREDICTION PAGE
+-------------------
+The Prediction page estimates a student's dropout risk.
+
+The user enters student information. The frontend sends the information to
+the /predict FastAPI endpoint.
+
+The backend then:
+1. Validates the submitted data.
+2. Loads the trained machine-learning model.
+3. Sends the student features to the model.
+4. Calculates a risk probability.
+5. Converts the probability into Low, Medium, or High risk.
+6. Saves the prediction record in SQLite.
+7. Sends the result back to the frontend.
+
+The result includes:
+- Risk level
+- Probability percentage
+- Prediction result
+- Important contributing features
+- Explanation text
+- Ethical warning
+
+Factors used by the model include attendance, CGPA, backlogs, academic
+performance, internal marks, assignment scores, study hours, course, gender,
+age, and semester.
+
+
+7. ANALYTICS PAGE
+------------------
+The Analytics page explains that the system can be used to study patterns in:
+- Attendance
+- Academic performance
+- Student risk
+- Dropout labels
+
+Analytics can help identify students who may require support.
+
+A relationship between two variables does not prove that one variable causes
+the other. For example, low attendance may be related to dropout risk, but it
+may not be the only reason.
+
+
+8. DATASET PAGE
+----------------
+The Dataset page allows the user to upload a CSV file.
+
+The CSV must contain these required columns:
+- age
+- gender
+- course
+- semester
+- attendance
+- previous_semester_marks
+- current_internal_marks
+- assignment_score
+- previous_cgpa
+- backlogs
+- study_hours
+- academic_performance
+- dropout_label
+
+The backend checks whether the file is a CSV and whether the required columns
+are present.
+
+The included sample_students.csv file contains synthetic demonstration data.
+It is not real student data.
+
+
+9. MACHINE-LEARNING MODEL
+--------------------------
+The project uses a RandomForestClassifier.
+
+A Random Forest is made from many decision trees. Each tree studies patterns
+in the training data. The trees work together to produce a final prediction.
+
+The model uses a preprocessing pipeline:
+- Numeric values are prepared and missing values can be filled.
+- Text values such as gender and course are converted into numeric form.
+- The processed values are given to the Random Forest model.
+
+The model is trained automatically when the backend starts if the sample
+dataset is available. It can also be trained using the Train Model button on
+the ML Model page.
+
+
+10. MODEL EVALUATION METRICS
+-----------------------------
+The ML Model page displays these evaluation values:
+
+Accuracy:
+The percentage of all predictions that were correct.
+
+Precision:
+Of the students predicted to be at risk, the percentage who were actually
+labelled as at risk.
+
+Recall:
+Of all students who were actually labelled as at risk, the percentage the
+model successfully found.
+
+F1-score:
+A combined score that balances precision and recall.
+
+ROC-AUC:
+A score that measures how well the model separates different risk classes.
+
+Confusion matrix:
+A table that compares the model's predictions with the actual labels.
+
+The sample dataset is small and synthetic. Therefore, the model may produce
+very high scores. High demonstration scores do not guarantee the same results
+on real college data.
+
+
+11. COMPLETE DATA FLOW
+----------------------
+The application follows this process:
+
+React frontend
+      |
+      v
+FastAPI backend
+      |
+      +---- SQLite database
+      |
+      +---- CSV dataset
+      |
+      +---- Machine-learning model
+
+Example prediction flow:
+1. The user fills in the prediction form.
+2. React sends the form data to FastAPI.
+3. FastAPI validates the data.
+4. The trained model calculates the estimate.
+5. FastAPI saves the prediction record.
+6. The result is returned to React.
+7. React displays the risk level and explanation.
+
+
+12. HOW TO RUN THE PROJECT
+---------------------------
+Start the backend in one terminal:
+
+cd backend
+.\.venv\Scripts\python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+Start the frontend in another terminal:
+
+npm --prefix ".\frontend" run dev -- --host 0.0.0.0 --port 5173
+
+Open the website in a browser:
+
+http://localhost:5173
+
+The backend API documentation is available at:
+
+http://localhost:8000/docs
+
+
+13. TESTING
+-----------
+Backend tests can be run with:
+
+cd backend
+.\.venv\Scripts\python -m pytest -q
+
+The frontend can be checked with:
+
+cd frontend
+npm run build
+npm run lint
+
+
+14. RESPONSIVE DESIGN
+---------------------
+The website is designed to work on laptop and smaller screens.
+
+Responsive features include:
+- Full-width laptop layout
+- Flexible dashboard cards
+- Mobile navigation that can scroll horizontally
+- Forms that change from two columns to one column
+- Tables that can scroll horizontally on small screens
+- Mobile-friendly buttons and spacing
+
+The old Vite starter root width restriction was removed so the website can use
+the full browser width.
+
+
+15. LIMITATIONS AND ETHICAL USE
+--------------------------------
+- The sample dataset is synthetic demonstration data.
+- Predictions are not certainties.
+- A model can make incorrect predictions.
+- Real student data must be collected and used responsibly.
+- Sensitive student information must be protected.
+- Human review is required before taking action.
+- The prediction must never be the only basis for an education decision.
+- Model performance on synthetic data may not represent real-world performance.
+
+
+16. PROJECT SUMMARY
+--------------------
+This project combines a React dashboard, a FastAPI backend, a SQLite database,
+a CSV dataset, and a Random Forest machine-learning model.
+
+It demonstrates how educational data can be collected, stored, analysed, and
+used to produce a risk estimate while keeping human judgement and student
+support at the centre of the process.
