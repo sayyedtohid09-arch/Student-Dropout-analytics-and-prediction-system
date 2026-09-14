@@ -45,6 +45,7 @@ select {
 .app-shell {
   display: flex;
   min-height: 100vh;
+  width: 100%;
 }
 
 .sidebar {
@@ -129,12 +130,11 @@ select {
 .main-content {
   flex: 1;
   min-width: 0;
-  padding: 40px clamp(20px, 4vw, 64px) 56px;
+  padding: 32px 28px 48px;
 }
 
 .page {
-  width: min(100%, 1240px);
-  margin: 0 auto;
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 22px;
