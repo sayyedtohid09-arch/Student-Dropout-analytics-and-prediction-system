@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Runtime artifacts
+backend/student_dropout.db
+backend/ml/saved_model.joblib
+
+# Frontend dependencies and build output
+frontend/node_modules/
+frontend/dist/
+
+# Local tooling
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+*.log

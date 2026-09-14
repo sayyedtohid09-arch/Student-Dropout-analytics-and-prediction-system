@@ -1,0 +1,85 @@
+from fastapi.testclient import TestClient
+from uuid import uuid4
+
+from app.main import app
+
+client = TestClient(app)
+
+
+def test_root_endpoint():
+    response = client.get('/')
+    assert response.status_code == 200
+    assert 'message' in response.json()
+
+
+def test_student_creation_and_fetch():
+    payload = {
+        'student_id': f'TEST-{uuid4().hex[:8]}',
+        'age': 20,
+        'gender': 'Female',
+        'course': 'B.Sc. Computer Science',
+        'semester': 3,
+        'attendance': 85,
+        'previous_semester_marks': 78,
+        'current_internal_marks': 80,
+        'assignment_score': 82,
+        'previous_cgpa': 7.8,
+        'backlogs': 0,
+        'study_hours': 4.7,
+        'academic_performance': 81,
+        'dropout_label': 0,
+    }
+
+    create_response = client.post('/students', json=payload)
+    assert create_response.status_code == 200
+    student = create_response.json()
+    assert student['student_id'] == payload['student_id']
+
+    fetch_response = client.get('/students')
+    assert fetch_response.status_code == 200
+    assert any(item['student_id'] == payload['student_id'] for item in fetch_response.json())
+
+
+def test_prediction_endpoint():
+    payload = {
+        'student_id': 'PRED-001',
+        'age': 19,
+        'gender': 'Male',
+        'course': 'B.Sc. Computer Science',
+        'semester': 2,
+        'attendance': 60,
+        'previous_semester_marks': 58,
+        'current_internal_marks': 62,
+        'assignment_score': 57,
+        'previous_cgpa': 5.9,
+        'backlogs': 3,
+        'study_hours': 2.8,
+        'academic_performance': 60,
+    }
+
+    response = client.post('/predict', json=payload)
+    assert response.status_code == 200
+    body = response.json()
+    assert 'risk_level' in body
+    assert 'probability' in body
+
+
+def test_invalid_input_is_rejected():
+    bad_payload = {
+        'student_id': 'X',
+        'age': 10,
+        'gender': 'Female',
+        'course': 'B.Sc. Computer Science',
+        'semester': 13,
+        'attendance': 101,
+        'previous_semester_marks': 75,
+        'current_internal_marks': 70,
+        'assignment_score': 80,
+        'previous_cgpa': 7.5,
+        'backlogs': -1,
+        'study_hours': 1,
+        'academic_performance': 80,
+    }
+
+    response = client.post('/predict', json=bad_payload)
+    assert response.status_code == 422

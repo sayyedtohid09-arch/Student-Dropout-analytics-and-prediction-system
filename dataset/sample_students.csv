@@ -1,0 +1,51 @@
+student_id,age,gender,course,semester,attendance,previous_semester_marks,current_internal_marks,assignment_score,previous_cgpa,backlogs,study_hours,academic_performance,dropout_label
+S001,19,Female,B.Sc. Computer Science,2,92,78,80,86,7.8,0,4.5,82,0
+S002,20,Male,B.Sc. Computer Science,3,84,72,75,74,7.2,1,3.8,76,0
+S003,21,Female,BA Economics,4,71,64,68,70,6.5,2,3.2,68,0
+S004,19,Male,B.Com,2,55,49,50,52,5.1,4,2.4,51,1
+S005,22,Female,B.Sc. Computer Science,5,88,81,83,85,8.0,0,5.0,85,0
+S006,20,Male,B.Tech,3,63,58,60,62,6.0,2,2.9,61,1
+S007,18,Female,BBA,1,96,88,90,92,8.6,0,5.8,90,0
+S008,23,Male,B.Sc. Computer Science,6,47,43,46,45,4.4,6,1.7,45,1
+S009,21,Female,BCA,4,78,70,73,72,6.9,1,4.1,73,0
+S010,20,Male,B.Com,3,52,47,49,51,4.8,5,2.3,50,1
+S011,19,Female,B.Tech,2,90,84,87,88,8.3,0,4.9,86,0
+S012,22,Male,B.Sc. Computer Science,5,66,61,63,65,6.2,3,3.0,64,1
+S013,24,Female,BA Economics,6,74,67,71,69,6.7,1,3.6,70,0
+S014,21,Male,BBA,3,58,54,55,57,5.5,4,2.7,56,1
+S015,20,Female,BCA,2,91,83,85,84,8.1,0,5.1,84,0
+S016,23,Male,B.Tech,6,49,46,48,47,4.6,7,1.8,47,1
+S017,22,Female,B.Com,5,80,74,77,79,7.4,1,4.3,78,0
+S018,19,Male,B.Tech,2,61,57,59,60,5.9,3,2.8,60,1
+S019,21,Female,B.Sc. Computer Science,4,87,79,81,83,7.9,1,4.7,82,0
+S020,20,Male,BCA,3,69,62,64,66,6.3,2,3.1,65,1
+S021,18,Female,B.Tech,1,94,86,89,90,8.8,0,5.6,88,0
+S022,24,Male,BA Economics,7,42,39,41,40,4.0,8,1.5,41,1
+S023,21,Female,BBA,4,82,76,78,80,7.7,0,4.6,79,0
+S024,22,Male,B.Com,4,57,53,54,56,5.4,4,2.5,55,1
+S025,20,Female,B.Tech,3,89,82,84,86,8.2,0,5.2,85,0
+S026,23,Female,B.Sc. Computer Science,6,65,60,62,64,6.1,3,3.0,63,1
+S027,19,Male,BCA,2,95,87,91,92,8.9,0,5.9,90,0
+S028,22,Female,BBA,5,73,68,70,71,6.8,1,3.8,72,0
+S029,21,Male,B.Tech,4,53,48,52,50,4.9,5,2.2,51,1
+S030,20,Female,B.Com,3,85,77,79,81,7.6,1,4.2,80,0
+S031,18,Male,B.Sc. Computer Science,1,98,90,92,93,9.1,0,6.2,92,0
+S032,23,Female,B.Tech,6,44,41,43,42,4.2,7,1.6,43,1
+S033,22,Male,BCA,5,79,73,75,77,7.3,1,4.0,76,0
+S034,20,Female,BA Economics,3,59,56,58,60,5.8,3,2.7,59,1
+S035,21,Male,BBA,4,88,80,82,84,7.9,0,4.8,83,0
+S036,24,Female,B.Tech,7,40,38,39,41,3.9,8,1.2,40,1
+S037,19,Male,B.Sc. Computer Science,2,93,85,88,89,8.5,0,5.5,87,0
+S038,22,Female,BA Economics,5,67,62,64,66,6.4,2,3.2,65,1
+S039,21,Male,B.Com,4,75,71,72,74,7.1,1,3.9,73,0
+S040,20,Female,B.Tech,3,62,59,60,58,5.9,3,2.8,60,1
+S041,18,Male,BBA,1,97,89,91,92,8.7,0,6.0,90,0
+S042,23,Female,B.Sc. Computer Science,6,51,46,49,48,4.7,5,2.1,48,1
+S043,21,Male,B.Com,3,81,75,77,79,7.5,0,4.5,78,0
+S044,20,Female,BCA,3,70,66,68,70,6.6,2,3.4,69,0
+S045,22,Male,B.Tech,5,46,42,44,43,4.3,6,1.7,44,1
+S046,19,Female,B.Sc. Computer Science,2,86,78,80,82,7.8,0,4.6,81,0
+S047,24,Male,BA Economics,7,37,35,38,36,3.6,9,1.1,37,1
+S048,20,Female,BBA,3,83,76,79,80,7.6,0,4.7,78,0
+S049,22,Male,BCA,5,60,55,58,59,5.7,3,2.6,58,1
+S050,21,Female,B.Tech,4,92,84,87,88,8.4,0,5.4,86,0
