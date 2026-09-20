@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from typing import List
 
@@ -6,7 +7,7 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 from .database import SessionLocal, engine
-from .ml_service import predict_dropout_risk, train_and_evaluate_model
+from .ml_service import FEATURE_COLUMNS, load_model, predict_dropout_risk, train_and_evaluate_model
 from .models import Base, ModelMetadata, PredictionRecord, Student
 from .schemas import (
     DatasetUploadResponse,
@@ -21,6 +22,9 @@ from .schemas import (
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Student Dropout Analytics and Prediction System")
+
+frontend_urls = os.getenv("FRONTEND_URL", "http://localhost:5173")
+allowed_origins = [url.strip() for url in frontend_urls.split(",") if url.strip()]
 
 
 @app.on_event("startup")
@@ -50,7 +54,7 @@ def init_demo_model():
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -201,10 +205,25 @@ async def upload_dataset(file: UploadFile = File(...)):
     if missing:
         raise HTTPException(status_code=400, detail=f"CSV is missing required columns: {missing}")
 
+    try:
+        model = load_model()
+        dropout_percentages = model.predict_proba(df[FEATURE_COLUMNS])[:, 1] * 100
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Could not calculate dropout percentages: {str(exc)}") from exc
+
+    student_dropout_percentages = [
+        {
+            "student_id": str(row.get("student_id", f"Student {index + 1}")),
+            "dropout_percentage": round(float(dropout_percentages[index]), 2),
+        }
+        for index, (_, row) in enumerate(df.iterrows())
+    ]
+
     return DatasetUploadResponse(
         message="Dataset uploaded successfully.",
         rows_loaded=len(df),
         columns=df.columns.tolist(),
+        student_dropout_percentages=student_dropout_percentages,
     )
 
 

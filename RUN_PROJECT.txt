@@ -1,0 +1,103 @@
+Student Dropout Analytics and Prediction System
+===========================================
+
+How to run this project on your laptop
+--------------------------------------
+
+This project has two parts:
+1. Backend API (Python + FastAPI)
+2. Frontend dashboard (React + Vite)
+
+You must run both at the same time in separate terminals.
+
+--------------------------------------------------
+STEP 1: Open a terminal in the project folder
+--------------------------------------------------
+Go to:
+C:\Users\sayye\OneDrive\Documents\GitHub\Student-Dropout-analytics-and-prediction-system
+
+If you are already there, you can continue.
+
+--------------------------------------------------
+STEP 2: Start the backend
+--------------------------------------------------
+In Terminal 1, run from the project root:
+
+cd backend
+.\.venv\Scripts\Activate.ps1
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+Important:
+- Do not run `cd backend` again if you are already inside the backend folder.
+- If PowerShell blocks script execution, use:
+  Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+- Or open PowerShell inside the backend folder and run:
+  .\.venv\Scripts\python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+The backend should start successfully and stay running.
+
+Check it in a browser:
+http://localhost:8000
+
+--------------------------------------------------
+STEP 3: Start the frontend
+--------------------------------------------------
+Open a second terminal.
+
+Run:
+
+cd frontend
+npm install
+npm run dev -- --host 0.0.0.0
+
+The frontend should start and keep running.
+
+Open in browser:
+http://localhost:5173
+
+--------------------------------------------------
+STEP 4: Use the app
+--------------------------------------------------
+After both servers are running:
+- Go to http://localhost:5173
+- Add student records
+- Predict dropout risk
+- View analytics and model metrics
+- Upload a dataset if needed
+
+--------------------------------------------------
+OPTIONAL: Run backend tests
+--------------------------------------------------
+In the backend terminal, or a new terminal:
+
+cd backend
+.\.venv\Scripts\python -m pytest -q
+
+This checks that the API logic is working.
+
+--------------------------------------------------
+OPTIONAL: Build the frontend for production
+--------------------------------------------------
+In the frontend terminal:
+
+npm run build
+
+This creates a production version of the app.
+
+--------------------------------------------------
+Important notes
+--------------------------------------------------
+- The backend and frontend are separate apps and must both be running.
+- If the app does not load, make sure there are no port conflicts.
+- If Python packages are missing, install them using the backend requirements file.
+- This project uses a demo dataset and predictive model for academic demonstration.
+
+Prediction Disclaimer:
+Predictions are estimates based on historical data and should not be used as the sole basis for decisions about a student's education. Human review and appropriate support are required.
+
+--------------------------------------------------
+Project folder
+--------------------------------------------------
+C:\Users\sayye\OneDrive\Documents\GitHub\Student-Dropout-analytics-and-prediction-system
+
+This file was created for easy startup instructions.

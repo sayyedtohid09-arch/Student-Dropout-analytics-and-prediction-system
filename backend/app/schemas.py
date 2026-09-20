@@ -98,3 +98,4 @@ class DatasetUploadResponse(BaseModel):
     message: str
     rows_loaded: int
     columns: list[str]
+    student_dropout_percentages: list[dict[str, float | str]]

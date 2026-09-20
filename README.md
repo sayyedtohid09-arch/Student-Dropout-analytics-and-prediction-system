@@ -89,6 +89,53 @@ npm run dev
 
 Open http://localhost:5173
 
+## Deploying with Supabase and Vercel
+
+The recommended production setup is:
+
+- Vercel for the React/Vite frontend
+- Render or Railway for the FastAPI backend
+- Supabase PostgreSQL for persistent application data
+
+### Supabase setup
+
+1. Create a Supabase project.
+2. Open **Connect** and copy a PostgreSQL connection string. Use the session pooler connection if your backend host cannot use IPv6.
+3. Keep the password private. It must only be added to the backend host as `DATABASE_URL`.
+
+The backend supports Supabase through the `DATABASE_URL` environment variable and continues to use SQLite locally when that variable is absent. See `backend/.env.example`.
+
+### Backend deployment
+
+Deploy the `backend` directory to Render or Railway with:
+
+```text
+Build command: pip install -r requirements.txt
+Start command: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+```
+
+Add these backend environment variables:
+
+```text
+DATABASE_URL=your Supabase PostgreSQL connection string
+FRONTEND_URL=https://your-project.vercel.app
+```
+
+After deployment, verify `https://your-backend-host/` and `/docs` load successfully.
+
+### Vercel deployment
+
+1. Import the repository into Vercel.
+2. Set **Root Directory** to `frontend`.
+3. Set **Build Command** to `npm run build`.
+4. Set **Output Directory** to `dist`.
+5. Add `VITE_API_BASE_URL` with the public URL of the deployed FastAPI backend.
+6. Deploy, then update the backend `FRONTEND_URL` with the final Vercel URL if it changed.
+
+The frontend reads `VITE_API_BASE_URL` at build time. Do not put `DATABASE_URL` or any Supabase service-role key in Vercel frontend variables.
+
+CSV uploads are validated by the backend but are stored on the backend filesystem temporarily. The current model is trained from the repository dataset; persistent file storage and background model training should be added separately before using real data.
+
 ## Model Training
 
 The model is trained using the sample CSV file in the dataset folder.

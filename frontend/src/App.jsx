@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { BrowserRouter, Link, NavLink, Route, Routes } from 'react-router-dom';
 import './App.css';
 
-const API_BASE = 'http://127.0.0.1:8000';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
 
 function StatCard({ title, value, hint, tone = 'blue' }) {
   return (
@@ -317,13 +317,66 @@ function AnalyticsPage() {
   );
 }
 
+function parseCsv(text) {
+  const rows = [];
+  let row = [];
+  let value = '';
+  let quoted = false;
+
+  for (let index = 0; index < text.length; index += 1) {
+    const character = text[index];
+    const nextCharacter = text[index + 1];
+
+    if (character === '"' && quoted && nextCharacter === '"') {
+      value += '"';
+      index += 1;
+    } else if (character === '"') {
+      quoted = !quoted;
+    } else if (character === ',' && !quoted) {
+      row.push(value.trim());
+      value = '';
+    } else if ((character === '\n' || character === '\r') && !quoted) {
+      if (character === '\r' && nextCharacter === '\n') index += 1;
+      row.push(value.trim());
+      if (row.some((cell) => cell)) rows.push(row);
+      row = [];
+      value = '';
+    } else {
+      value += character;
+    }
+  }
+
+  if (value || row.length) {
+    row.push(value.trim());
+    if (row.some((cell) => cell)) rows.push(row);
+  }
+
+  return rows;
+}
+
 function DatasetPage() {
   const [file, setFile] = useState(null);
   const [message, setMessage] = useState('');
+  const [datasetStats, setDatasetStats] = useState(null);
+  const [studentPercentages, setStudentPercentages] = useState([]);
 
   const handleUpload = async (event) => {
     event.preventDefault();
     if (!file) return;
+
+    const rows = parseCsv(await file.text());
+    const headers = rows[0]?.map((header) => header.toLowerCase());
+    const dropoutIndex = headers?.indexOf('dropout_label');
+
+    if (!headers || dropoutIndex === -1 || rows.length < 2) {
+      setDatasetStats(null);
+      setMessage('Upload failed: the CSV must contain rows and a dropout_label column.');
+      return;
+    }
+
+    const studentRows = rows.slice(1).filter((row) => row.some((cell) => cell));
+    const dropoutStudents = studentRows.filter((row) => Number(row[dropoutIndex]) === 1).length;
+    const dropoutPercentage = ((dropoutStudents / studentRows.length) * 100).toFixed(2);
 
     const formData = new FormData();
     formData.append('file', file);
@@ -334,7 +387,19 @@ function DatasetPage() {
     });
 
     const data = await res.json();
-    setMessage(res.ok ? `${data.message} Rows: ${data.rows_loaded}` : data.detail || 'Upload failed');
+    if (res.ok) {
+      setMessage(`${data.message} Rows: ${data.rows_loaded}`);
+      setStudentPercentages(data.student_dropout_percentages || []);
+      setDatasetStats({
+        totalStudents: studentRows.length,
+        dropoutStudents,
+        dropoutPercentage,
+      });
+    } else {
+      setDatasetStats(null);
+      setStudentPercentages([]);
+      setMessage(data.detail || 'Upload failed');
+    }
   };
 
   return (
@@ -355,6 +420,36 @@ function DatasetPage() {
         </form>
         {message && <p className="message-box">{message}</p>}
       </div>
+      {datasetStats && (
+        <div className="stats-grid">
+          <StatCard title="Uploaded Students" value={datasetStats.totalStudents} hint="Rows in this CSV" tone="blue" />
+          <StatCard title="Dropout Students" value={datasetStats.dropoutStudents} hint="Rows with dropout label 1" tone="red" />
+          <StatCard title="Dropout Percentage" value={`${datasetStats.dropoutPercentage}%`} hint="Across uploaded students" tone="purple" />
+        </div>
+      )}
+      {studentPercentages.length > 0 && (
+        <div className="card table-card">
+          <h3>Dropout Percentage by Student</h3>
+          <div className="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Student ID</th>
+                  <th>Dropout Percentage</th>
+                </tr>
+              </thead>
+              <tbody>
+                {studentPercentages.map((student) => (
+                  <tr key={student.student_id}>
+                    <td>{student.student_id}</td>
+                    <td>{student.dropout_percentage}%</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
