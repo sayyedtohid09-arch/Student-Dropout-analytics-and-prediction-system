@@ -98,3 +98,19 @@ class DatasetUploadResponse(BaseModel):
     rows_loaded: int
     columns: list[str]
     student_dropout_percentages: list[dict[str, float | str]]
+
+
+class CourseRiskStat(BaseModel):
+    course: str
+    total_students: int
+    at_risk_students: int
+    dropout_rate: float
+
+
+class TrendsResponse(BaseModel):
+    total_students: int
+    course_breakdown: list[CourseRiskStat]
+    attendance_by_risk: dict[str, float]
+    academic_by_risk: dict[str, float]
+    backlogs_by_risk: dict[str, float]
+

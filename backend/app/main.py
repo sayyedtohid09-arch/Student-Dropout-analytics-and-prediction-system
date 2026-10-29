@@ -14,6 +14,7 @@ from .database import SessionLocal, engine
 from .ml_service import FEATURE_COLUMNS, load_model, predict_dropout_risk, train_and_evaluate_model
 from .models import Base, ModelMetadata, PredictionRecord, Student
 from .schemas import (
+    CourseRiskStat,
     DatasetUploadResponse,
     MetricsResponse,
     PredictionRequest,
@@ -21,6 +22,7 @@ from .schemas import (
     StudentCreate,
     StudentRead,
     StudentUpdate,
+    TrendsResponse,
 )
 
 logger = logging.getLogger(__name__)
@@ -358,6 +360,65 @@ def analytics_overview():
             "average_academic_performance": round(sum(s.academic_performance for s in students) / total, 2),
             "students_requiring_attention": high,
         }
+    finally:
+        db.close()
+
+
+@app.get("/analytics/trends", response_model=TrendsResponse)
+def analytics_trends():
+    db = SessionLocal()
+    try:
+        students = db.query(Student).all()
+        if not students:
+            return TrendsResponse(
+                total_students=0,
+                course_breakdown=[],
+                attendance_by_risk={"low_risk": 0.0, "high_risk": 0.0},
+                academic_by_risk={"low_risk": 0.0, "high_risk": 0.0},
+                backlogs_by_risk={"low_risk": 0.0, "high_risk": 0.0},
+            )
+
+        courses_map: dict = {}
+        for s in students:
+            c = s.course or "General"
+            if c not in courses_map:
+                courses_map[c] = {"total": 0, "at_risk": 0}
+            courses_map[c]["total"] += 1
+            if s.dropout_label == 1:
+                courses_map[c]["at_risk"] += 1
+
+        course_breakdown = [
+            CourseRiskStat(
+                course=c,
+                total_students=data["total"],
+                at_risk_students=data["at_risk"],
+                dropout_rate=round((data["at_risk"] / data["total"] * 100), 2) if data["total"] else 0.0,
+            )
+            for c, data in sorted(courses_map.items(), key=lambda item: item[1]["total"], reverse=True)
+        ]
+
+        low_students = [s for s in students if s.dropout_label == 0]
+        high_students = [s for s in students if s.dropout_label == 1]
+
+        def avg(lst, attr):
+            return round(sum(getattr(s, attr) for s in lst) / len(lst), 2) if lst else 0.0
+
+        return TrendsResponse(
+            total_students=len(students),
+            course_breakdown=course_breakdown,
+            attendance_by_risk={
+                "low_risk": avg(low_students, "attendance"),
+                "high_risk": avg(high_students, "attendance"),
+            },
+            academic_by_risk={
+                "low_risk": avg(low_students, "academic_performance"),
+                "high_risk": avg(high_students, "academic_performance"),
+            },
+            backlogs_by_risk={
+                "low_risk": avg(low_students, "backlogs"),
+                "high_risk": avg(high_students, "backlogs"),
+            },
+        )
     finally:
         db.close()
 

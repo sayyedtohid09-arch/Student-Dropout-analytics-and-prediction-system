@@ -130,3 +130,15 @@ def test_student_search_and_pagination(client):
     assert isinstance(search_res.json(), list)
 
 
+def test_analytics_trends(client):
+    response = client.get('/analytics/trends')
+    assert response.status_code == 200
+    body = response.json()
+    assert 'course_breakdown' in body
+    assert 'attendance_by_risk' in body
+    assert 'academic_by_risk' in body
+    assert 'backlogs_by_risk' in body
+    assert isinstance(body['course_breakdown'], list)
+
+
+
