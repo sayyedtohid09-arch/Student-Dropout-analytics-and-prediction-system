@@ -14,9 +14,11 @@ from .database import SessionLocal, engine
 from .ml_service import FEATURE_COLUMNS, load_model, predict_dropout_risk, train_and_evaluate_model
 from .models import Base, ModelMetadata, PredictionRecord, Student
 from .schemas import (
+    BatchPredictionRequest,
     CourseRiskStat,
     DatasetUploadResponse,
     MetricsResponse,
+    PredictionHistoryItem,
     PredictionRequest,
     PredictionResponse,
     StudentCreate,
@@ -226,6 +228,55 @@ def predict_student(payload: PredictionRequest):
         return PredictionResponse(**result)
     finally:
         db.close()
+
+
+@app.post("/predict/batch", response_model=List[PredictionResponse])
+def predict_batch(payload: BatchPredictionRequest):
+    if not payload.students:
+        raise HTTPException(status_code=400, detail="Student list cannot be empty.")
+
+    try:
+        load_model()
+    except FileNotFoundError:
+        dataset_path = Path(__file__).resolve().parents[2] / "dataset" / "sample_students.csv"
+        if dataset_path.exists():
+            df = pd.read_csv(dataset_path)
+            train_and_evaluate_model(df)
+
+    db = SessionLocal()
+    results = []
+    try:
+        for student in payload.students:
+            result = predict_dropout_risk(student.model_dump())
+            record = PredictionRecord(
+                student_id=student.student_id,
+                risk_level=result["risk_level"],
+                probability=result["probability"],
+                explanation=result["explanation"],
+                features=",".join(result["important_features"]),
+            )
+            db.add(record)
+            results.append(PredictionResponse(**result))
+        db.commit()
+        return results
+    finally:
+        db.close()
+
+
+@app.get("/predictions/history", response_model=List[PredictionHistoryItem])
+def get_prediction_history(limit: int = 20):
+    db = SessionLocal()
+    try:
+        records = (
+            db.query(PredictionRecord)
+            .order_by(PredictionRecord.created_at.desc())
+            .limit(min(100, max(1, limit)))
+            .all()
+        )
+        return records
+    finally:
+        db.close()
+
 
 
 @app.post("/dataset/upload", response_model=DatasetUploadResponse, dependencies=[Depends(verify_api_key)])

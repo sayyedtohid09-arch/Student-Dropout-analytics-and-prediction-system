@@ -141,4 +141,38 @@ def test_analytics_trends(client):
     assert isinstance(body['course_breakdown'], list)
 
 
+def test_batch_prediction_and_history(client):
+    student_payload = {
+        'student_id': f'BATCH-{uuid4().hex[:6]}',
+        'age': 20,
+        'gender': 'Female',
+        'course': 'B.Sc. Computer Science',
+        'semester': 3,
+        'attendance': 75,
+        'previous_semester_marks': 70,
+        'current_internal_marks': 72,
+        'assignment_score': 74,
+        'previous_cgpa': 7.0,
+        'backlogs': 1,
+        'study_hours': 3.5,
+        'academic_performance': 72,
+    }
+
+    # Test batch prediction
+    batch_response = client.post('/predict/batch', json={'students': [student_payload]})
+    assert batch_response.status_code == 200
+    results = batch_response.json()
+    assert isinstance(results, list)
+    assert len(results) == 1
+    assert 'risk_level' in results[0]
+
+    # Test prediction history
+    history_response = client.get('/predictions/history?limit=10')
+    assert history_response.status_code == 200
+    history = history_response.json()
+    assert isinstance(history, list)
+    assert any(h['student_id'] == student_payload['student_id'] for h in history)
+
+
+
 

@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -113,4 +114,19 @@ class TrendsResponse(BaseModel):
     attendance_by_risk: dict[str, float]
     academic_by_risk: dict[str, float]
     backlogs_by_risk: dict[str, float]
+
+
+class BatchPredictionRequest(BaseModel):
+    students: list[PredictionRequest] = Field(..., max_length=100)
+
+
+class PredictionHistoryItem(BaseModel):
+    id: int
+    student_id: str
+    risk_level: str
+    probability: float
+    created_at: Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
 
