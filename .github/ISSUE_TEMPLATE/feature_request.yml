@@ -1,0 +1,38 @@
+name: Feature Request
+description: Propose a new feature, enhancement, or analytical metric
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea for Student Dropout Analytics? Let us know what you would like to see!
+  - type: input
+    id: summary
+    attributes:
+      label: Feature Title
+      description: A concise summary of the requested feature.
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Is your feature request related to a problem?
+      description: A clear description of the challenge or workflow gap you are experiencing.
+      placeholder: I am always frustrated when...
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution / Enhancement
+      description: Describe what you would like to see implemented and how it should work.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternative Solutions Considered
+      description: Any alternative ideas or workarounds you have evaluated.
+    validations:
+      required: false

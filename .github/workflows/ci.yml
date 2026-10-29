@@ -42,3 +42,8 @@ jobs:
         run: |
           cd frontend
           npm run build
+      - name: Security audit
+        run: |
+          cd frontend
+          npm audit --audit-level=high || true
+
