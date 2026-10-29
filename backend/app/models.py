@@ -1,8 +1,12 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import Boolean, Column, DateTime, Float, Integer, String, Text
 
 from .database import Base
+
+
+def utcnow():
+    return datetime.now(timezone.utc)
 
 
 class Student(Base):
@@ -23,7 +27,7 @@ class Student(Base):
     study_hours = Column(Float, nullable=False)
     academic_performance = Column(Float, nullable=False)
     dropout_label = Column(Integer, default=0)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
 
 
 class PredictionRecord(Base):
@@ -35,7 +39,7 @@ class PredictionRecord(Base):
     probability = Column(Float, nullable=False)
     explanation = Column(Text, default="")
     features = Column(Text, default="")
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
 
 
 class ModelMetadata(Base):
@@ -48,5 +52,6 @@ class ModelMetadata(Base):
     recall = Column(Float, nullable=False)
     f1_score = Column(Float, nullable=False)
     roc_auc = Column(Float, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    confusion_matrix = Column(Text, default="[]")
+    created_at = Column(DateTime, default=utcnow)
     notes = Column(Text, default="")

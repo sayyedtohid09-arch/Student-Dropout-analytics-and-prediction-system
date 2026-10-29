@@ -1,18 +1,32 @@
+import pytest
 from fastapi.testclient import TestClient
 from uuid import uuid4
 
 from app.main import app
 
-client = TestClient(app)
+
+@pytest.fixture
+def client():
+    with TestClient(app) as client:
+        yield client
 
 
-def test_root_endpoint():
+def test_root_endpoint(client):
     response = client.get('/')
     assert response.status_code == 200
     assert 'message' in response.json()
 
 
-def test_student_creation_and_fetch():
+def test_health_endpoint(client):
+    response = client.get('/health')
+    assert response.status_code == 200
+    body = response.json()
+    assert 'status' in body
+    assert 'database' in body
+    assert 'model' in body
+
+
+def test_student_creation_and_fetch(client):
     payload = {
         'student_id': f'TEST-{uuid4().hex[:8]}',
         'age': 20,
@@ -40,7 +54,7 @@ def test_student_creation_and_fetch():
     assert any(item['student_id'] == payload['student_id'] for item in fetch_response.json())
 
 
-def test_prediction_endpoint():
+def test_prediction_endpoint(client):
     payload = {
         'student_id': 'PRED-001',
         'age': 19,
@@ -64,7 +78,7 @@ def test_prediction_endpoint():
     assert 'probability' in body
 
 
-def test_invalid_input_is_rejected():
+def test_invalid_input_is_rejected(client):
     bad_payload = {
         'student_id': 'X',
         'age': 10,
@@ -83,3 +97,22 @@ def test_invalid_input_is_rejected():
 
     response = client.post('/predict', json=bad_payload)
     assert response.status_code == 422
+
+
+def test_analytics_overview(client):
+    response = client.get('/analytics/overview')
+    assert response.status_code == 200
+    body = response.json()
+    assert 'medium_risk' in body
+    assert body['total_students'] >= 0
+
+
+def test_model_metrics_available(client):
+    response = client.get('/model/metrics')
+    # Model may be trained during startup; accept 200 or 404.
+    assert response.status_code in (200, 404)
+    if response.status_code == 200:
+        body = response.json()
+        assert 'confusion_matrix' in body
+        assert isinstance(body['confusion_matrix'], list)
+

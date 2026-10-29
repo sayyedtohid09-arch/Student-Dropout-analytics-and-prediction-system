@@ -78,9 +78,14 @@ def train_and_evaluate_model(df: pd.DataFrame):
     X = df[FEATURE_COLUMNS]
     y = df[TARGET_COLUMN]
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.25, random_state=42, stratify=y
-    )
+    try:
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.25, random_state=42, stratify=y
+        )
+    except ValueError:
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.25, random_state=42
+        )
 
     pipeline = build_model_pipeline(pd.concat([X_train, y_train], axis=1))
     pipeline.fit(X_train, y_train)

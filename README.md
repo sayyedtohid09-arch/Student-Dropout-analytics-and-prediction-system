@@ -123,6 +123,17 @@ FRONTEND_URL=https://your-project.vercel.app
 
 After deployment, verify `https://your-backend-host/` and `/docs` load successfully.
 
+### Backend environment variables
+
+```text
+DATABASE_URL=optional PostgreSQL/Supabase connection string
+FRONTEND_URL=http://localhost:5173
+API_KEY=optional shared secret for write endpoints
+MAX_UPLOAD_SIZE=5242880
+```
+
+When `API_KEY` is set, clients must send it in the `X-API-Key` header for create/update/delete, CSV upload, and model training endpoints. Read endpoints remain public.
+
 ### Vercel deployment
 
 1. Import the repository into Vercel.
@@ -146,6 +157,11 @@ The model is trained using the sample CSV file in the dataset folder.
 - Predictions are not guaranteed
 - Human review is always required
 
+## Contributing
+
+Contributions are welcome! Please check out [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on code style, testing, and submitting pull requests.
+
 ## License
 
 This is a student project for academic use.
+
