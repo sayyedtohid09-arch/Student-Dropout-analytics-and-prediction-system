@@ -4,6 +4,12 @@ __pycache__/
 .venv/
 venv/
 *.egg-info/
+.pytest_cache/
+
+# Environment variables
+.env
+.env.*
+!.env.example
 
 # Runtime artifacts
 backend/student_dropout.db
