@@ -1,12 +1,12 @@
 import os
+from pathlib import Path
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-SQLALCHEMY_DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "sqlite:///./student_dropout.db",
-)
+BASE_DIR = Path(__file__).resolve().parents[1]
+default_db = f"sqlite:///{BASE_DIR / 'student_dropout.db'}"
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL") or default_db
 
 engine_options = {}
 if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
