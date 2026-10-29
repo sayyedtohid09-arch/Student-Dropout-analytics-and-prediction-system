@@ -150,6 +150,20 @@ function StudentsPage() {
     }
   };
 
+  const [search, setSearch] = useState('');
+  const [filterRisk, setFilterRisk] = useState('all');
+
+  const filteredStudents = students.filter((s) => {
+    const matchesSearch = !search ||
+      (s.student_id && s.student_id.toLowerCase().includes(search.toLowerCase())) ||
+      (s.course && s.course.toLowerCase().includes(search.toLowerCase()));
+    const matchesRisk =
+      filterRisk === 'all' ||
+      (filterRisk === 'at_risk' && s.dropout_label === 1) ||
+      (filterRisk === 'safe' && s.dropout_label === 0);
+    return matchesSearch && matchesRisk;
+  });
+
   return (
     <div className="page">
       <div className="page-header">
@@ -182,7 +196,23 @@ function StudentsPage() {
         </form>
 
         <div className="card table-card">
-          <h3>Student List</h3>
+          <div className="table-header-bar">
+            <h3>Student List ({filteredStudents.length})</h3>
+            <div className="table-filters">
+              <input
+                type="text"
+                placeholder="Search ID or course..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="filter-input"
+              />
+              <select value={filterRisk} onChange={(e) => setFilterRisk(e.target.value)} className="filter-select">
+                <option value="all">All</option>
+                <option value="safe">Low Risk</option>
+                <option value="at_risk">At Risk</option>
+              </select>
+            </div>
+          </div>
           <div className="table-scroll">
             <table>
               <thead>
@@ -195,7 +225,7 @@ function StudentsPage() {
                 </tr>
               </thead>
               <tbody>
-                {students.length ? students.map((student) => (
+                {filteredStudents.length ? filteredStudents.map((student) => (
                   <tr key={student.id}>
                     <td>{student.student_id}</td>
                     <td>{student.course}</td>
@@ -204,7 +234,7 @@ function StudentsPage() {
                     <td><RiskPill level={student.dropout_label === 1 ? 'High' : 'Low'} /></td>
                   </tr>
                 )) : (
-                  <tr><td colSpan="5">No students available.</td></tr>
+                  <tr><td colSpan="5">No students found matching your criteria.</td></tr>
                 )}
               </tbody>
             </table>

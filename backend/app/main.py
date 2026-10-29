@@ -114,13 +114,27 @@ def health():
 
 
 @app.get("/students", response_model=List[StudentRead])
-def get_students():
+def get_students(
+    skip: int = 0,
+    limit: int = 100,
+    search: Optional[str] = None,
+    course: Optional[str] = None,
+    dropout_label: Optional[int] = None,
+):
     db = SessionLocal()
     try:
-        students = db.query(Student).all()
-        return students
+        query = db.query(Student)
+        if search:
+            term = f"%{search.strip()}%"
+            query = query.filter((Student.student_id.ilike(term)) | (Student.course.ilike(term)))
+        if course:
+            query = query.filter(Student.course.ilike(f"%{course.strip()}%"))
+        if dropout_label is not None:
+            query = query.filter(Student.dropout_label == dropout_label)
+        return query.order_by(Student.id.desc()).offset(max(0, skip)).limit(min(500, max(1, limit))).all()
     finally:
         db.close()
+
 
 
 @app.post("/students", response_model=StudentRead, dependencies=[Depends(verify_api_key)])

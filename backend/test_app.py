@@ -116,3 +116,17 @@ def test_model_metrics_available(client):
         assert 'confusion_matrix' in body
         assert isinstance(body['confusion_matrix'], list)
 
+
+def test_student_search_and_pagination(client):
+    # Test pagination query params
+    response = client.get('/students?skip=0&limit=5')
+    assert response.status_code == 200
+    assert isinstance(response.json(), list)
+    assert len(response.json()) <= 5
+
+    # Test search query param
+    search_res = client.get('/students?search=TEST')
+    assert search_res.status_code == 200
+    assert isinstance(search_res.json(), list)
+
+
