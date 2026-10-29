@@ -150,6 +150,20 @@ function StudentsPage() {
     }
   };
 
+  const [search, setSearch] = useState('');
+  const [filterRisk, setFilterRisk] = useState('all');
+
+  const filteredStudents = students.filter((s) => {
+    const matchesSearch = !search ||
+      (s.student_id && s.student_id.toLowerCase().includes(search.toLowerCase())) ||
+      (s.course && s.course.toLowerCase().includes(search.toLowerCase()));
+    const matchesRisk =
+      filterRisk === 'all' ||
+      (filterRisk === 'at_risk' && s.dropout_label === 1) ||
+      (filterRisk === 'safe' && s.dropout_label === 0);
+    return matchesSearch && matchesRisk;
+  });
+
   return (
     <div className="page">
       <div className="page-header">
@@ -182,7 +196,23 @@ function StudentsPage() {
         </form>
 
         <div className="card table-card">
-          <h3>Student List</h3>
+          <div className="table-header-bar">
+            <h3>Student List ({filteredStudents.length})</h3>
+            <div className="table-filters">
+              <input
+                type="text"
+                placeholder="Search ID or course..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="filter-input"
+              />
+              <select value={filterRisk} onChange={(e) => setFilterRisk(e.target.value)} className="filter-select">
+                <option value="all">All</option>
+                <option value="safe">Low Risk</option>
+                <option value="at_risk">At Risk</option>
+              </select>
+            </div>
+          </div>
           <div className="table-scroll">
             <table>
               <thead>
@@ -195,7 +225,7 @@ function StudentsPage() {
                 </tr>
               </thead>
               <tbody>
-                {students.length ? students.map((student) => (
+                {filteredStudents.length ? filteredStudents.map((student) => (
                   <tr key={student.id}>
                     <td>{student.student_id}</td>
                     <td>{student.course}</td>
@@ -204,7 +234,7 @@ function StudentsPage() {
                     <td><RiskPill level={student.dropout_label === 1 ? 'High' : 'Low'} /></td>
                   </tr>
                 )) : (
-                  <tr><td colSpan="5">No students available.</td></tr>
+                  <tr><td colSpan="5">No students found matching your criteria.</td></tr>
                 )}
               </tbody>
             </table>
@@ -321,6 +351,20 @@ function PredictionPage() {
 }
 
 function AnalyticsPage() {
+  const [trends, setTrends] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`${API_BASE}/analytics/trends`)
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to load trends');
+        return res.json();
+      })
+      .then((data) => setTrends(data))
+      .catch(() => setTrends(null))
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
     <div className="page">
       <div className="page-header">
@@ -329,9 +373,73 @@ function AnalyticsPage() {
           <h1>Academic and Risk Trends</h1>
         </div>
       </div>
-      <div className="card analytics-card">
-        <p>This analytics view is designed for demo-level insights. It helps identify patterns related to attendance, academic performance, and dropout risk. Correlation does not prove causation.</p>
-      </div>
+
+      {loading ? (
+        <div className="card empty-state">Loading trend analytics...</div>
+      ) : !trends ? (
+        <div className="card empty-state">No trend analytics available. Add students or train the model first.</div>
+      ) : (
+        <>
+          <div className="stats-grid">
+            <StatCard
+              title="Attendance Gap"
+              value={`${trends.attendance_by_risk.low_risk}% vs ${trends.attendance_by_risk.high_risk}%`}
+              hint="Low-risk vs At-risk attendance"
+              tone="cyan"
+            />
+            <StatCard
+              title="Academic Score Gap"
+              value={`${trends.academic_by_risk.low_risk}% vs ${trends.academic_by_risk.high_risk}%`}
+              hint="Low-risk vs At-risk performance"
+              tone="indigo"
+            />
+            <StatCard
+              title="Avg Backlogs Gap"
+              value={`${trends.backlogs_by_risk.low_risk} vs ${trends.backlogs_by_risk.high_risk}`}
+              hint="Low-risk vs At-risk average backlogs"
+              tone="amber"
+            />
+          </div>
+
+          <div className="card table-card">
+            <h3>Course-Level Dropout Distribution</h3>
+            <div className="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Course Name</th>
+                    <th>Enrolled Students</th>
+                    <th>Students At Risk</th>
+                    <th>Dropout Rate</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {trends.course_breakdown.length ? (
+                    trends.course_breakdown.map((row) => (
+                      <tr key={row.course}>
+                        <td><strong>{row.course}</strong></td>
+                        <td>{row.total_students}</td>
+                        <td>{row.at_risk_students}</td>
+                        <td>
+                          <span className={`risk-pill ${row.dropout_rate >= 40 ? 'high' : row.dropout_rate >= 20 ? 'medium' : 'low'}`}>
+                            {row.dropout_rate}%
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr><td colSpan="4">No course data recorded yet.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="card alert-box">
+            <p><strong>Note on Correlation:</strong> Behavioral indicators like attendance and backlog accumulation are strong statistical predictors of dropout risk, but should be paired with proactive student counseling and individualized support plans.</p>
+          </div>
+        </>
+      )}
     </div>
   );
 }

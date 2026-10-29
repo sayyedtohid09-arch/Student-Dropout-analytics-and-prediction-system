@@ -1,0 +1,53 @@
+name: Bug Report
+description: Create a report to help us fix a bug or unexpected behavior
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting an issue! Please provide as much detail as possible so the maintainers can reproduce and fix it.
+  - type: input
+    id: summary
+    attributes:
+      label: Brief Summary
+      description: A concise 1-sentence summary of the bug.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: What steps did you take to encounter the problem?
+      placeholder: |
+        1. Start the backend with 'uvicorn app.main:app'
+        2. Make a request to '/students'
+        3. See error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen instead?
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error Logs or Screenshots
+      description: Paste any terminal logs, stack traces, or upload screenshots here.
+      render: shell
+    validations:
+      required: false
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Operating System / Environment
+      options:
+        - Windows
+        - Linux / Ubuntu
+        - macOS
+        - Docker / Container
+    validations:
+      required: true

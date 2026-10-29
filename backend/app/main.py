@@ -14,13 +14,17 @@ from .database import SessionLocal, engine
 from .ml_service import FEATURE_COLUMNS, load_model, predict_dropout_risk, train_and_evaluate_model
 from .models import Base, ModelMetadata, PredictionRecord, Student
 from .schemas import (
+    BatchPredictionRequest,
+    CourseRiskStat,
     DatasetUploadResponse,
     MetricsResponse,
+    PredictionHistoryItem,
     PredictionRequest,
     PredictionResponse,
     StudentCreate,
     StudentRead,
     StudentUpdate,
+    TrendsResponse,
 )
 
 logger = logging.getLogger(__name__)
@@ -114,13 +118,27 @@ def health():
 
 
 @app.get("/students", response_model=List[StudentRead])
-def get_students():
+def get_students(
+    skip: int = 0,
+    limit: int = 100,
+    search: Optional[str] = None,
+    course: Optional[str] = None,
+    dropout_label: Optional[int] = None,
+):
     db = SessionLocal()
     try:
-        students = db.query(Student).all()
-        return students
+        query = db.query(Student)
+        if search:
+            term = f"%{search.strip()}%"
+            query = query.filter((Student.student_id.ilike(term)) | (Student.course.ilike(term)))
+        if course:
+            query = query.filter(Student.course.ilike(f"%{course.strip()}%"))
+        if dropout_label is not None:
+            query = query.filter(Student.dropout_label == dropout_label)
+        return query.order_by(Student.id.desc()).offset(max(0, skip)).limit(min(500, max(1, limit))).all()
     finally:
         db.close()
+
 
 
 @app.post("/students", response_model=StudentRead, dependencies=[Depends(verify_api_key)])
@@ -210,6 +228,55 @@ def predict_student(payload: PredictionRequest):
         return PredictionResponse(**result)
     finally:
         db.close()
+
+
+@app.post("/predict/batch", response_model=List[PredictionResponse])
+def predict_batch(payload: BatchPredictionRequest):
+    if not payload.students:
+        raise HTTPException(status_code=400, detail="Student list cannot be empty.")
+
+    try:
+        load_model()
+    except FileNotFoundError:
+        dataset_path = Path(__file__).resolve().parents[2] / "dataset" / "sample_students.csv"
+        if dataset_path.exists():
+            df = pd.read_csv(dataset_path)
+            train_and_evaluate_model(df)
+
+    db = SessionLocal()
+    results = []
+    try:
+        for student in payload.students:
+            result = predict_dropout_risk(student.model_dump())
+            record = PredictionRecord(
+                student_id=student.student_id,
+                risk_level=result["risk_level"],
+                probability=result["probability"],
+                explanation=result["explanation"],
+                features=",".join(result["important_features"]),
+            )
+            db.add(record)
+            results.append(PredictionResponse(**result))
+        db.commit()
+        return results
+    finally:
+        db.close()
+
+
+@app.get("/predictions/history", response_model=List[PredictionHistoryItem])
+def get_prediction_history(limit: int = 20):
+    db = SessionLocal()
+    try:
+        records = (
+            db.query(PredictionRecord)
+            .order_by(PredictionRecord.created_at.desc())
+            .limit(min(100, max(1, limit)))
+            .all()
+        )
+        return records
+    finally:
+        db.close()
+
 
 
 @app.post("/dataset/upload", response_model=DatasetUploadResponse, dependencies=[Depends(verify_api_key)])
@@ -344,6 +411,65 @@ def analytics_overview():
             "average_academic_performance": round(sum(s.academic_performance for s in students) / total, 2),
             "students_requiring_attention": high,
         }
+    finally:
+        db.close()
+
+
+@app.get("/analytics/trends", response_model=TrendsResponse)
+def analytics_trends():
+    db = SessionLocal()
+    try:
+        students = db.query(Student).all()
+        if not students:
+            return TrendsResponse(
+                total_students=0,
+                course_breakdown=[],
+                attendance_by_risk={"low_risk": 0.0, "high_risk": 0.0},
+                academic_by_risk={"low_risk": 0.0, "high_risk": 0.0},
+                backlogs_by_risk={"low_risk": 0.0, "high_risk": 0.0},
+            )
+
+        courses_map: dict = {}
+        for s in students:
+            c = s.course or "General"
+            if c not in courses_map:
+                courses_map[c] = {"total": 0, "at_risk": 0}
+            courses_map[c]["total"] += 1
+            if s.dropout_label == 1:
+                courses_map[c]["at_risk"] += 1
+
+        course_breakdown = [
+            CourseRiskStat(
+                course=c,
+                total_students=data["total"],
+                at_risk_students=data["at_risk"],
+                dropout_rate=round((data["at_risk"] / data["total"] * 100), 2) if data["total"] else 0.0,
+            )
+            for c, data in sorted(courses_map.items(), key=lambda item: item[1]["total"], reverse=True)
+        ]
+
+        low_students = [s for s in students if s.dropout_label == 0]
+        high_students = [s for s in students if s.dropout_label == 1]
+
+        def avg(lst, attr):
+            return round(sum(getattr(s, attr) for s in lst) / len(lst), 2) if lst else 0.0
+
+        return TrendsResponse(
+            total_students=len(students),
+            course_breakdown=course_breakdown,
+            attendance_by_risk={
+                "low_risk": avg(low_students, "attendance"),
+                "high_risk": avg(high_students, "attendance"),
+            },
+            academic_by_risk={
+                "low_risk": avg(low_students, "academic_performance"),
+                "high_risk": avg(high_students, "academic_performance"),
+            },
+            backlogs_by_risk={
+                "low_risk": avg(low_students, "backlogs"),
+                "high_risk": avg(high_students, "backlogs"),
+            },
+        )
     finally:
         db.close()
 

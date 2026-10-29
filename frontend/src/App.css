@@ -297,6 +297,41 @@ table {
   overflow-x: auto;
 }
 
+.table-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.table-header-bar h3 {
+  margin: 0;
+}
+
+.table-filters {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.filter-input {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  min-width: 160px;
+}
+
+.filter-select {
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  background: white;
+}
+
 th,
 td {
   padding: 12px 10px;
