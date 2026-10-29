@@ -4,6 +4,10 @@ import './App.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
 
+if (import.meta.env.PROD && !import.meta.env.VITE_API_BASE_URL) {
+  console.warn('VITE_API_BASE_URL is not set; falling back to http://127.0.0.1:8000. Set it for production deployments.');
+}
+
 function StatCard({ title, value, hint, tone = 'blue' }) {
   return (
     <div className="card stat-card">
@@ -98,7 +102,10 @@ function StudentsPage() {
 
   const loadStudents = () => {
     fetch(`${API_BASE}/students`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to load students');
+        return res.json();
+      })
       .then((data) => setStudents(data))
       .catch(() => setStudents([]));
   };
@@ -225,6 +232,7 @@ function PredictionPage() {
     academic_performance: 70,
   });
   const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -233,16 +241,26 @@ function PredictionPage() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setError(null);
     const payload = { ...form, age: Number(form.age), semester: Number(form.semester), attendance: Number(form.attendance), previous_semester_marks: Number(form.previous_semester_marks), current_internal_marks: Number(form.current_internal_marks), assignment_score: Number(form.assignment_score), previous_cgpa: Number(form.previous_cgpa), backlogs: Number(form.backlogs), study_hours: Number(form.study_hours), academic_performance: Number(form.academic_performance) };
 
-    const res = await fetch(`${API_BASE}/predict`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
+    try {
+      const res = await fetch(`${API_BASE}/predict`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
 
-    const data = await res.json();
-    setResult(data);
+      if (!res.ok) {
+        const errorBody = await res.json().catch(() => ({}));
+        throw new Error(errorBody.detail || `Prediction failed (${res.status})`);
+      }
+
+      const data = await res.json();
+      setResult(data);
+    } catch (err) {
+      setError(err.message || 'Prediction failed.');
+    }
   };
 
   return (
@@ -276,6 +294,7 @@ function PredictionPage() {
         </form>
 
         <div className="card result-card">
+          {error ? <p className="form-error">{error}</p> : null}
           {result ? (
             <>
               <h3>Prediction</h3>
